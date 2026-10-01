@@ -8,6 +8,6 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local"), override: true 
 export default defineConfig({
   schema: "prisma/schema.prisma",
   datasource: {
-    url: process.env.DATABASE_URL || env("DATABASE_URL"),
+    url: process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/adyk_inspire?schema=public",
   },
 });
