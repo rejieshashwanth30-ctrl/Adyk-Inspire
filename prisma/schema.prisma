@@ -1,0 +1,48 @@
+// ADYK Inspire — Prisma Schema
+// PostgreSQL Production Architecture
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum RegistrationStatus {
+  NEW
+  REVIEWING
+  CONTACTED
+  FOLLOW_UP
+  JOINED
+  CLOSED
+}
+
+model Registration {
+  id                     String             @id @default(uuid())
+  fullName               String
+  email                  String
+  whatsapp               String
+  location               String?
+  ageGroup               String?
+  role                   String
+  interests              String[]
+  hasIdea                String             // "YES" | "NO" | "STILL EXPLORING"
+  ideaDescription        String?            @db.Text
+  explorationDescription String?            @db.Text
+  lookingFor             String[]
+  linkedin               String?
+  github                 String?
+  website                String?
+  contactPreference      String             @default("Either") // "WhatsApp" | "Email" | "Either"
+  consent                Boolean            @default(true)
+  status                 RegistrationStatus @default(NEW)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  contactedAt            DateTime?
+  notes                  String?            @db.Text
+
+  @@index([email])
+  @@index([createdAt])
+  @@index([status])
+}
