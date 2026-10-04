@@ -158,12 +158,59 @@ test("Validation Schema: Rejects missing consent", () => {
   }
 });
 
-test("Rate Limiter: Throttles duplicate submissions by email", () => {
-  const testEmail = "test_rate_unique@adyk.in";
-  const first = rateLimitRegistration("192.168.1.10", testEmail);
-  assert.equal(first.allowed, true);
+test("Rate Limiter: Allows reasonable submissions and throttles bot floods", () => {
+  const testEmail = "test_rate_flood@adyk.in";
+  const testIp = "192.168.1.100";
 
-  // Immediate second submission with same email should be blocked
-  const second = rateLimitRegistration("192.168.1.10", testEmail);
-  assert.equal(second.allowed, false);
+  // First 5 attempts from this email are permitted (allows typo fixes, retrying)
+  for (let i = 0; i < 5; i++) {
+    const res = rateLimitRegistration(testIp, testEmail);
+    assert.equal(res.allowed, true, `Attempt ${i + 1} should be allowed`);
+  }
+
+  // 6th attempt within window should be throttled
+  const throttled = rateLimitRegistration(testIp, testEmail);
+  assert.equal(throttled.allowed, false, "Abusive flood should be throttled");
+  assert.equal(throttled.errorCode, "RATE_LIMIT_ERROR");
 });
+
+test("WhatsApp Click-to-Chat: Builds dynamic message and omits empty optional fields", () => {
+  const { buildWhatsAppMessage, generateWhatsAppClickToChatUrl } = require("../lib/whatsapp");
+
+  const reg = {
+    fullName: "Alex Rivera",
+    whatsapp: "+91 8870605699",
+    location: "Bangalore",
+    role: "Developer",
+    hasIdea: "YES",
+    interests: ["AI / ML", "Startups"],
+    ideaDescription: "Autonomous developer agents.",
+    lookingFor: ["Find Collaborators", "Build a Project"],
+    linkedin: "https://linkedin.com/in/alex",
+    // github and website are intentionally empty/omitted
+    createdAt: new Date("2026-10-04T12:00:00Z"),
+  };
+
+  const message = buildWhatsAppMessage(reg);
+
+  assert.ok(message.includes("🔔 NEW ADYK INSPIRE REGISTRATION"));
+  assert.ok(message.includes("👤 Name: Alex Rivera"));
+  assert.ok(message.includes("📱 Mobile: +91 8870605699"));
+  assert.ok(message.includes("📍 Location: Bangalore"));
+  assert.ok(message.includes("🎓 Role: Developer"));
+  assert.ok(message.includes("💡 Has Idea: Yes"));
+  assert.ok(message.includes("🚀 Interests: AI / ML, Startups"));
+  assert.ok(message.includes("💭 Idea:\nAutonomous developer agents."));
+  assert.ok(message.includes("🤝 Looking For:\nFind Collaborators, Build a Project"));
+  assert.ok(message.includes("🔗 LinkedIn: https://linkedin.com/in/alex"));
+  assert.ok(!message.includes("GitHub:"), "Empty GitHub should be omitted");
+  assert.ok(!message.includes("Website:"), "Empty Website should be omitted");
+  assert.ok(!message.includes("undefined"), "Should never contain 'undefined'");
+  assert.ok(!message.includes("null"), "Should never contain 'null'");
+  assert.ok(message.includes("ADYK INSPIRE\nLearn. Build. Share. Inspire."));
+
+  const url = generateWhatsAppClickToChatUrl(reg);
+  assert.ok(url.startsWith("https://wa.me/918870605699?text="));
+  assert.ok(url.includes(encodeURIComponent("Alex Rivera")));
+});
+

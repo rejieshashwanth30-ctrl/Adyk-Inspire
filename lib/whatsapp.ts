@@ -1,97 +1,169 @@
 import { RegistrationRecord } from "@/types/registration";
 
 /**
- * Build formatted plain text message for WhatsApp
+ * ADYK Admin WhatsApp Number in E.164 international format without '+'
+ * Recipient: +91 8870605699 -> "918870605699"
  */
-export function formatWhatsAppMessage(reg: Partial<RegistrationRecord>): string {
-  return `🚀 *NEW ADYK INSPIRE REGISTRATION*
+export const ADMIN_WHATSAPP_NUMBER = "918870605699";
 
-*Name:* ${reg.fullName || "N/A"}
-*Role:* ${reg.role || "N/A"}
-*Location:* ${reg.location || "N/A"}
-*Email:* ${reg.email || "N/A"}
-*WhatsApp:* ${reg.whatsapp || "N/A"}
-*Interests:* ${(reg.interests || []).join(", ") || "N/A"}
-*Has Idea:* ${reg.hasIdea || "N/A"}${
-    reg.ideaDescription ? `\n*Idea:* ${reg.ideaDescription}` : ""
-  }
-*Looking For:* ${(reg.lookingFor || []).join(", ") || "N/A"}
-*Registration ID:* ${reg.id || "Pending"}
-
-Please review the registration in the ADYK system.`;
+/**
+ * Cleans phone number to international digits-only format
+ */
+export function cleanWhatsAppNumber(phone: string): string {
+  if (!phone) return ADMIN_WHATSAPP_NUMBER;
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 10) return `91${digits}`;
+  if (digits.startsWith("0")) return `91${digits.replace(/^0+/, "")}`;
+  return digits;
 }
 
 /**
- * Generate manual WhatsApp direct link fallback
+ * Builds the plain text WhatsApp message dynamically from registration details.
+ * 
+ * Rules:
+ * 1. Only include fields that actually exist.
+ * 2. If optional fields are empty, simply omit those lines.
+ * 3. Never output "undefined", "null", or empty placeholders.
+ * 4. No sensitive system or database details.
+ */
+export function buildWhatsAppMessage(reg: Partial<RegistrationRecord>): string {
+  const lines: string[] = ["🔔 NEW ADYK INSPIRE REGISTRATION", ""];
+
+  if (reg.fullName && reg.fullName.trim() !== "") {
+    lines.push(`👤 Name: ${reg.fullName.trim()}`);
+  }
+
+  if (reg.whatsapp && reg.whatsapp.trim() !== "") {
+    lines.push(`📱 Mobile: ${reg.whatsapp.trim()}`);
+  }
+
+  if (reg.location && reg.location.trim() !== "") {
+    lines.push(`📍 Location: ${reg.location.trim()}`);
+  }
+
+  if (reg.role && reg.role.trim() !== "") {
+    lines.push(`🎓 Role: ${reg.role.trim()}`);
+  }
+
+  if (reg.hasIdea && reg.hasIdea.trim() !== "") {
+    const ideaText =
+      reg.hasIdea === "YES"
+        ? "Yes"
+        : reg.hasIdea === "NO"
+        ? "No"
+        : reg.hasIdea === "STILL EXPLORING"
+        ? "Still Exploring"
+        : reg.hasIdea;
+    lines.push(`💡 Has Idea: ${ideaText}`);
+  }
+
+  if (reg.interests && Array.isArray(reg.interests)) {
+    const validInterests = reg.interests.filter(
+      (item) => typeof item === "string" && item.trim() !== ""
+    );
+    if (validInterests.length > 0) {
+      lines.push(`🚀 Interests: ${validInterests.join(", ")}`);
+    }
+  }
+
+  // Include idea description if it exists
+  if (reg.ideaDescription && reg.ideaDescription.trim() !== "") {
+    lines.push("");
+    lines.push("💭 Idea:");
+    lines.push(reg.ideaDescription.trim());
+  } else if (reg.explorationDescription && reg.explorationDescription.trim() !== "") {
+    lines.push("");
+    lines.push("💭 Idea / Exploring:");
+    lines.push(reg.explorationDescription.trim());
+  }
+
+  // Include lookingFor if it exists
+  if (reg.lookingFor && Array.isArray(reg.lookingFor)) {
+    const validLooking = reg.lookingFor.filter(
+      (item) => typeof item === "string" && item.trim() !== ""
+    );
+    if (validLooking.length > 0) {
+      lines.push("");
+      lines.push("🤝 Looking For:");
+      lines.push(validLooking.join(", "));
+    }
+  }
+
+  // Social / Portfolio Links (only add section if at least one exists)
+  const links: string[] = [];
+  if (reg.linkedin && reg.linkedin.trim() !== "") {
+    links.push(`🔗 LinkedIn: ${reg.linkedin.trim()}`);
+  }
+  if (reg.github && reg.github.trim() !== "") {
+    links.push(`💻 GitHub: ${reg.github.trim()}`);
+  }
+  if (reg.website && reg.website.trim() !== "") {
+    links.push(`🌐 Website: ${reg.website.trim()}`);
+  }
+
+  if (links.length > 0) {
+    lines.push("");
+    lines.push(...links);
+  }
+
+  // Submission time formatted in Indian Standard Time (Asia/Kolkata)
+  lines.push("");
+  const dateObj = reg.createdAt ? new Date(reg.createdAt) : new Date();
+  const timeFormatted = dateObj.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+  lines.push(`🕐 Submitted: ${timeFormatted}`);
+
+  lines.push("");
+  lines.push("ADYK INSPIRE");
+  lines.push("Learn. Build. Share. Inspire.");
+
+  return lines.join("\n");
+}
+
+/**
+ * Generates the WhatsApp Click-to-Chat URL using standard https://wa.me/{number}?text={encoded}
+ * Does NOT require WhatsApp Business API or Meta Cloud API credentials.
+ */
+export function generateWhatsAppClickToChatUrl(
+  reg: Partial<RegistrationRecord>,
+  adminNumber: string = ADMIN_WHATSAPP_NUMBER
+): string {
+  const message = buildWhatsAppMessage(reg);
+  const cleanNumber = cleanWhatsAppNumber(adminNumber);
+  return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+}
+
+/**
+ * Backward compatibility alias for fallback URL
  */
 export function generateWhatsAppFallbackUrl(reg: Partial<RegistrationRecord>): string {
-  const text = encodeURIComponent(formatWhatsAppMessage(reg));
-  const adminNumber = process.env.WHATSAPP_ADMIN_NUMBER?.trim() || "918870605699";
-  return `https://wa.me/${adminNumber}?text=${text}`;
+  return generateWhatsAppClickToChatUrl(reg);
+}
+
+export interface WhatsAppNotificationResult {
+  success: boolean;
+  clickToChatUrl: string;
+  fallbackUrl: string;
 }
 
 /**
- * Send WhatsApp notification to Admin via Meta WhatsApp Business Cloud API
+ * Synchronous, lightweight notification handler:
+ * Generates the click-to-chat URL without any external API calls or tokens.
  */
 export async function sendAdminWhatsAppNotification(
   reg: Partial<RegistrationRecord>
-): Promise<{ success: boolean; fallbackUrl: string; messageId?: string; error?: string }> {
-  const fallbackUrl = generateWhatsAppFallbackUrl(reg);
-  const token = process.env.WHATSAPP_ACCESS_TOKEN?.trim();
-  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID?.trim();
-  const adminNumber = process.env.WHATSAPP_ADMIN_NUMBER?.trim() || "918870605699";
-
-  if (!token || !phoneId) {
-    if (process.env.NODE_ENV === "development") {
-      console.log("ℹ️ [WhatsApp Cloud API] Not configured in .env.local (optional). Direct WhatsApp URL ready.");
-    }
-    return {
-      success: false,
-      fallbackUrl,
-      error: "WhatsApp API not configured — fallback available.",
-    };
-  }
-
-  try {
-    const messageBody = formatWhatsAppMessage(reg);
-
-    const response = await fetch(
-      `https://graph.facebook.com/v19.0/${phoneId}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          recipient_type: "individual",
-          to: adminNumber,
-          type: "text",
-          text: {
-            preview_url: false,
-            body: messageBody,
-          },
-        }),
-      }
-    );
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error("Meta WhatsApp Cloud API error response:", result);
-      return {
-        success: false,
-        fallbackUrl,
-        error: result.error?.message || "Meta API error",
-      };
-    }
-
-    const messageId = result.messages?.[0]?.id;
-    return { success: true, messageId, fallbackUrl };
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : "Network error contacting Meta API";
-    console.error("WhatsApp notification dispatch failed:", errorMsg);
-    return { success: false, fallbackUrl, error: errorMsg };
-  }
+): Promise<WhatsAppNotificationResult> {
+  const url = generateWhatsAppClickToChatUrl(reg);
+  return {
+    success: true,
+    clickToChatUrl: url,
+    fallbackUrl: url,
+  };
 }

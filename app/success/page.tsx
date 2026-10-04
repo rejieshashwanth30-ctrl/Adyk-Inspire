@@ -18,7 +18,12 @@ function getStoredNameSnapshot() {
   return sessionStorage.getItem("adyk_reg_name") || "";
 }
 
-function getServerNameSnapshot() {
+function getStoredWhatsAppUrlSnapshot() {
+  if (typeof window === "undefined") return "";
+  return sessionStorage.getItem("adyk_whatsapp_url") || "";
+}
+
+function getServerSnapshot() {
   return "";
 }
 
@@ -28,12 +33,26 @@ function SuccessContent() {
   const userName = useSyncExternalStore(
     subscribeSession,
     getStoredNameSnapshot,
-    getServerNameSnapshot
+    getServerSnapshot
   );
+  const storedWhatsAppUrl = useSyncExternalStore(
+    subscribeSession,
+    getStoredWhatsAppUrlSnapshot,
+    getServerSnapshot
+  );
+
+  const fallbackText = `🔔 NEW ADYK INSPIRE REGISTRATION\n\n${
+    userName ? `👤 Name: ${userName}\n` : ""
+  }${regId ? `🆔 Registration ID: ${regId}\n` : ""}🕐 Submitted: ${new Date().toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+  })}\n\nADYK INSPIRE\nLearn. Build. Share. Inspire.`;
+
+  const whatsappUrl =
+    storedWhatsAppUrl ||
+    `https://wa.me/918870605699?text=${encodeURIComponent(fallbackText)}`;
 
   return (
     <div className="max-w-xl mx-auto text-center py-16 px-4">
-      
       {/* Brand */}
       <div className="mb-12 flex justify-center">
         <AdykLogo size="md" href="/" />
@@ -56,15 +75,40 @@ function SuccessContent() {
         transition={{ duration: 0.6, delay: 0.2 }}
         className="space-y-3 mb-8"
       >
-        <span className="text-[11px] font-mono tracking-[0.25em] uppercase text-neutral-500 block">
-          REGISTRATION RECEIVED
+        <span className="text-[11px] font-mono tracking-[0.25em] uppercase text-emerald-400 block">
+          ✓ REGISTRATION SUCCESSFUL
         </span>
         <h1 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase text-white">
           YOU&apos;RE IN.
         </h1>
         <h2 className="text-lg sm:text-xl font-light tracking-tight text-neutral-300">
-          WELCOME TO ADYK INSPIRE{userName ? `, ${userName}` : ""}.
+          Welcome to ADYK Inspire{userName ? `, ${userName}` : ""}.
         </h2>
+        <p className="text-sm text-neutral-400 font-light">
+          Your registration has been received successfully.
+        </p>
+      </motion.div>
+
+      {/* Prominent WhatsApp Action Button */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.25 }}
+        className="mb-10 space-y-3"
+      >
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          id="whatsapp-send-button"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full text-xs font-bold uppercase tracking-[0.18em] bg-white text-black hover:bg-neutral-200 transition-all duration-300 shadow-2xl hover:shadow-white/20 active:scale-95"
+        >
+          <MessageSquare className="w-4 h-4 fill-black text-black" />
+          <span>📱 SEND DETAILS TO WHATSAPP</span>
+        </a>
+        <p className="text-[11px] font-mono text-neutral-500 max-w-md mx-auto leading-relaxed">
+          Opens WhatsApp with your registration details pre-filled. You just need to press send in WhatsApp.
+        </p>
       </motion.div>
 
       {/* Narrative Card */}
@@ -75,7 +119,7 @@ function SuccessContent() {
         className="p-6 sm:p-8 rounded-2xl bg-neutral-950/80 border border-neutral-900 text-left space-y-4 mb-10 text-xs sm:text-sm text-neutral-400 font-light leading-relaxed"
       >
         <p className="text-white font-normal">
-          Your registration has been successfully received and logged into the ADYK system.
+          Your registration is saved in the ADYK database.
         </p>
         <p>
           The ADYK team will review your submission and contact you directly via your chosen
@@ -102,9 +146,7 @@ function SuccessContent() {
         </div>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-xs font-mono">
           <a
-            href={`https://wa.me/918870605699?text=${encodeURIComponent(
-              `Hello ADYK Inspire team! I have submitted my registration${userName ? ` (${userName})` : ""}${regId ? ` [Ref: ${regId}]` : ""}. Looking forward to connecting!`
-            )}`}
+            href="https://wa.me/918870605699"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-neutral-800 bg-neutral-900/60 text-neutral-300 hover:text-white hover:border-neutral-700 transition-colors"
@@ -136,7 +178,6 @@ function SuccessContent() {
           <span>BACK TO ADYK INSPIRE</span>
         </Link>
       </motion.div>
-
     </div>
   );
 }

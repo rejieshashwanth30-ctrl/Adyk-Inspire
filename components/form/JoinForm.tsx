@@ -179,8 +179,11 @@ export function JoinForm() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const isSubmittingRef = React.useRef(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current) return;
     setServerError(null);
 
     if (!validateClientSide()) {
@@ -193,6 +196,7 @@ export function JoinForm() {
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -214,23 +218,27 @@ export function JoinForm() {
           });
           setErrors(mappedErrors);
         }
-        setServerError(result.message || "Failed to submit registration.");
+        setServerError(result.message || "Something went wrong while submitting your registration. Please try again.");
+        isSubmittingRef.current = false;
         setIsSubmitting(false);
         return;
       }
 
-      // Store submitted name in session storage for personalized success page
+      // Store submitted name and pre-filled WhatsApp URL in session storage for personalized success page
       if (typeof window !== "undefined") {
         sessionStorage.setItem("adyk_reg_name", formData.fullName);
         sessionStorage.setItem("adyk_reg_email", formData.email);
         sessionStorage.setItem("adyk_reg_id", result.data?.id || "");
+        if (result.data?.whatsappUrl) {
+          sessionStorage.setItem("adyk_whatsapp_url", result.data.whatsappUrl);
+        }
       }
 
       // Smooth transition to /success
       router.push(`/success?id=${encodeURIComponent(result.data?.id || "")}`);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Network error";
-      setServerError(`Unable to submit registration (${msg}). Please try again or reach out on WhatsApp: +91 8870605699.`);
+    } catch {
+      setServerError("Something went wrong while submitting your registration. Please try again.");
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -696,11 +704,11 @@ export function JoinForm() {
           {isSubmitting ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>SUBMITTING...</span>
+              <span>Submitting your registration...</span>
             </>
           ) : (
             <>
-              <span>JOIN ADYK</span>
+              <span>JOIN ADYK INSPIRE</span>
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
             </>
           )}

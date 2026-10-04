@@ -1,3 +1,5 @@
+import { ErrorCategory } from "@/types/registration";
+
 interface RateLimitRecord {
   count: number;
   resetAt: number;
@@ -6,9 +8,9 @@ interface RateLimitRecord {
 const ipStore = new Map<string, RateLimitRecord>();
 const emailStore = new Map<string, RateLimitRecord>();
 
-// Cleanup stale entries every 5 minutes
+// Periodic memory cleanup to prevent memory leaks in long-running processes
 if (typeof setInterval !== "undefined") {
-  setInterval(() => {
+  const cleanupTimer = setInterval(() => {
     const now = Date.now();
     for (const [key, value] of ipStore.entries()) {
       if (value.resetAt < now) ipStore.delete(key);
@@ -17,10 +19,11 @@ if (typeof setInterval !== "undefined") {
       if (value.resetAt < now) emailStore.delete(key);
     }
   }, 5 * 60 * 1000);
+  cleanupTimer.unref?.();
 }
 
 /**
- * Checks if a key has exceeded its limit within the time window
+ * Checks if a key has exceeded its limit within the time window.
  */
 function checkLimit(
   store: Map<string, RateLimitRecord>,
@@ -49,26 +52,37 @@ function checkLimit(
 }
 
 /**
- * Rate limit check for registrations:
- * - 5 submissions per 10 minutes per IP
- * - 1 submission per 5 minutes per email (duplicate spam protection)
+ * Production-safe rate limiting for registrations:
+ * - 30 submissions per 10 minutes per IP (supports shared college / co-working WiFi)
+ * - 5 submissions per 10 minutes per email (allows retrying typo fixes while preventing bot floods)
+ * 
+ * Note: Accidental double-clicks and rapid re-submits are handled idempotently
+ * in the registration API route to avoid blocking legitimate users.
  */
-export function rateLimitRegistration(ip: string, email?: string) {
-  const ipCheck = checkLimit(ipStore, `ip_${ip}`, 5, 10 * 60 * 1000);
+export function rateLimitRegistration(
+  ip: string,
+  email?: string
+): { allowed: boolean; reason?: string; errorCode?: ErrorCategory; resetAt?: number } {
+  // IP-level rate limiting
+  const ipCheck = checkLimit(ipStore, `ip_${ip}`, 30, 10 * 60 * 1000);
   if (!ipCheck.allowed) {
     return {
       allowed: false,
       reason: "Too many registration attempts from this connection. Please wait a few minutes.",
+      errorCode: "RATE_LIMIT_ERROR",
       resetAt: ipCheck.resetAt,
     };
   }
 
-  if (email) {
-    const emailCheck = checkLimit(emailStore, `email_${email.toLowerCase()}`, 1, 5 * 60 * 1000);
+  // Flood protection per email (allows retrying and corrections, prevents script flooding)
+  if (email && email.trim() !== "") {
+    const normalized = email.trim().toLowerCase();
+    const emailCheck = checkLimit(emailStore, `email_${normalized}`, 5, 10 * 60 * 1000);
     if (!emailCheck.allowed) {
       return {
         allowed: false,
-        reason: "A registration with this email address was already submitted recently. Please wait before submitting again.",
+        reason: "Too many submission attempts for this email address. Please wait a few minutes before trying again.",
+        errorCode: "RATE_LIMIT_ERROR",
         resetAt: emailCheck.resetAt,
       };
     }

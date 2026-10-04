@@ -74,10 +74,28 @@ export interface RegistrationRecord {
   notes?: string | null;
 }
 
+export type ErrorCategory =
+  | "VALIDATION_ERROR"
+  | "RATE_LIMIT_ERROR"
+  | "DUPLICATE_SUBMISSION"
+  | "DATABASE_ERROR"
+  | "EMAIL_ERROR"
+  | "WHATSAPP_ERROR"
+  | "UNKNOWN_ERROR";
+
+export interface RegistrationResponseData {
+  id: string;
+  fullName: string;
+  email: string;
+  whatsappUrl?: string;
+  alreadyRegistered?: boolean;
+}
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;
   errors?: Record<string, string[]>;
+  errorCode?: ErrorCategory;
   timestamp: string;
 }

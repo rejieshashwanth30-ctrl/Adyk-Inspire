@@ -1,57 +1,30 @@
 import { RegistrationRecord } from "@/types/registration";
-import { sendAdminNotificationEmail, sendUserConfirmationEmail as sendConfirmation } from "./email";
-import { sendAdminWhatsAppNotification } from "./whatsapp";
+import { generateWhatsAppClickToChatUrl } from "./whatsapp";
 
 export interface NotificationResults {
   adminEmail: { success: boolean; error?: string };
-  adminWhatsApp: { success: boolean; error?: string; fallbackUrl?: string };
+  adminWhatsApp: { success: boolean; error?: string; fallbackUrl?: string; clickToChatUrl?: string };
   userEmail: { success: boolean; error?: string };
 }
 
 /**
- * Dispatches all notification channels in parallel using Promise.allSettled.
- * Crucial guarantee: Never throws or halts the registration flow.
+ * Dispatches notification workflow:
+ * - Email is disabled per user requirements (no Resend API key or email setup needed).
+ * - Generates the direct WhatsApp Click-to-Chat URL (https://wa.me/918870605699?text=...).
+ * - Fast, synchronous, 100% reliable with zero external API dependencies.
  */
 export async function dispatchAllNotifications(
   registration: Partial<RegistrationRecord>
 ): Promise<NotificationResults> {
-  const results: NotificationResults = {
-    adminEmail: { success: false },
-    adminWhatsApp: { success: false },
-    userEmail: { success: false },
+  const whatsappUrl = generateWhatsAppClickToChatUrl(registration);
+
+  return {
+    adminEmail: { success: false, error: "Email notifications disabled per workflow configuration." },
+    adminWhatsApp: {
+      success: true,
+      clickToChatUrl: whatsappUrl,
+      fallbackUrl: whatsappUrl,
+    },
+    userEmail: { success: false, error: "User email disabled per workflow configuration." },
   };
-
-  const tasks = [
-    // 1. Admin Email
-    sendAdminNotificationEmail(registration).then((res) => {
-      results.adminEmail = res;
-    }),
-
-    // 2. Admin WhatsApp
-    sendAdminWhatsAppNotification(registration).then((res) => {
-      results.adminWhatsApp = {
-        success: res.success,
-        error: res.error,
-        fallbackUrl: res.fallbackUrl,
-      };
-    }),
-
-    // 3. User Confirmation Email
-    (async () => {
-      if (registration.fullName && registration.email) {
-        const res = await sendConfirmation(registration.fullName, registration.email);
-        results.userEmail = res;
-      }
-    })(),
-  ];
-
-  const outcomes = await Promise.allSettled(tasks);
-
-  outcomes.forEach((outcome, idx) => {
-    if (outcome.status === "rejected") {
-      console.error(`Notification channel [${idx}] rejected unexpectedly:`, outcome.reason);
-    }
-  });
-
-  return results;
 }
