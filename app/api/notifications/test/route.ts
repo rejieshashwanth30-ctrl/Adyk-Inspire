@@ -1,49 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendAdminNotificationEmail } from "@/lib/email";
-import { sendAdminWhatsAppNotification } from "@/lib/whatsapp";
+import { prisma, checkDbConnection, getDatabaseUrl } from "@/lib/db";
+import { generateWhatsAppClickToChatUrl } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json().catch(() => ({}));
-    const testRecord = {
-      id: "test-notification-diag-001",
-      fullName: body.fullName || "ADYK Test User",
-      email: body.email || "rejieshashwanth30@gmail.com",
-      whatsapp: body.whatsapp || "+918870605699",
-      role: body.role || "Developer",
-      interests: ["AI / ML", "Software Development", "Startups"],
-      hasIdea: "YES" as const,
-      ideaDescription: "Diagnostic test notification for ADYK Inspire system.",
-      lookingFor: ["Build a Project", "Networking"],
-      contactPreference: "Either" as const,
-      createdAt: new Date(),
-    };
-
-    const emailResult = await sendAdminNotificationEmail(testRecord);
-    const whatsappResult = await sendAdminWhatsAppNotification(testRecord);
-
-    return NextResponse.json({
-      status: "test_completed",
-      results: {
-        email: emailResult,
-        whatsapp: whatsappResult,
-      },
-      timestamp: new Date().toISOString(),
-    });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Error testing notifications";
-    return NextResponse.json(
-      { error: message, timestamp: new Date().toISOString() },
-      { status: 500 }
-    );
-  }
-}
-
 export async function GET() {
+  const conn = await checkDbConnection();
+  let createResult: { success: boolean; id?: string; error?: string } = { success: false };
+
+  try {
+    const testEmail = `probe_${Date.now()}@adyk.in`;
+    const created = await prisma.registration.create({
+      data: {
+        fullName: "Database Probe",
+        email: testEmail,
+        whatsapp: "+918870605699",
+        role: "Developer",
+        interests: ["AI / ML"],
+        hasIdea: "NO",
+        lookingFor: ["Learn"],
+        contactPreference: "Either",
+        consent: true,
+        status: "NEW",
+      },
+    });
+    createResult = { success: true, id: created.id };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    createResult = { success: false, error: msg };
+  }
+
+  const rawUrl = process.env.DATABASE_URL || "";
+  const maskedUrl = rawUrl ? `${rawUrl.slice(0, 15)}...${rawUrl.slice(-15)}` : "NOT_SET_IN_ENV";
+
   return NextResponse.json({
     status: "ok",
-    message: "Notification test endpoint is active. Use POST to trigger diagnostic notifications.",
+    databaseConnection: conn,
+    activeUrlType: rawUrl ? "from_env" : "using_neon_fallback",
+    maskedUrl,
+    registrationCreateTest: createResult,
+    timestamp: new Date().toISOString(),
   });
+}
+
+export async function POST(req: NextRequest) {
+  return GET();
 }
