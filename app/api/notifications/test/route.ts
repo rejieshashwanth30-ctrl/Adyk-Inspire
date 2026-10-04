@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, checkDbConnection, getDatabaseUrl } from "@/lib/db";
-import { generateWhatsAppClickToChatUrl } from "@/lib/whatsapp";
+import { prisma, checkDbConnection, getDatabaseUrl, NEON_PRODUCTION_DATABASE_URL } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const conn = await checkDbConnection();
+  const activeUrl = getDatabaseUrl();
+
+  let envHost = "NONE";
+  let activeHost = "NONE";
+  try {
+    if (process.env.DATABASE_URL) {
+      envHost = new URL(process.env.DATABASE_URL.replace(/^["']|["']$/g, "")).host;
+    }
+    activeHost = new URL(activeUrl).host;
+  } catch {}
+
   let createResult: { success: boolean; id?: string; error?: string } = { success: false };
 
   try {
@@ -30,14 +40,11 @@ export async function GET() {
     createResult = { success: false, error: msg };
   }
 
-  const rawUrl = process.env.DATABASE_URL || "";
-  const maskedUrl = rawUrl ? `${rawUrl.slice(0, 15)}...${rawUrl.slice(-15)}` : "NOT_SET_IN_ENV";
-
   return NextResponse.json({
     status: "ok",
     databaseConnection: conn,
-    activeUrlType: rawUrl ? "from_env" : "using_neon_fallback",
-    maskedUrl,
+    envHost,
+    activeHost,
     registrationCreateTest: createResult,
     timestamp: new Date().toISOString(),
   });
