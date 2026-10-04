@@ -107,41 +107,50 @@ export async function POST(req: NextRequest) {
     inFlightEmails.add(normalizedEmail);
 
     // 6. Accidental Duplicate / Rapid Double-Click Protection
+    // 6. Accidental Duplicate / Rapid Double-Click Protection
     // If exact same email was successfully saved within the last 60 seconds, reuse it safely
-    let savedRegistration: RegistrationRecord;
+    let recentSubmission = null;
     try {
       const sixtySecondsAgo = new Date(Date.now() - 60 * 1000);
-      const recentSubmission = await prisma.registration.findFirst({
+      recentSubmission = await prisma.registration.findFirst({
         where: {
           email: validData.email,
           createdAt: { gte: sixtySecondsAgo },
         },
         orderBy: { createdAt: "desc" },
       });
+    } catch (dedupErr) {
+      console.warn("⚠️ [DEDUP CHECK] Duplicate check warning (non-fatal, continuing to save):", dedupErr);
+    }
 
-      if (recentSubmission) {
-        console.log(
-          `[DEDUPLICATION] Accidental duplicate detected within 60s for email: ${validData.email}. Returning existing registration ID: ${recentSubmission.id}`
-        );
-        const whatsappUrl = generateWhatsAppClickToChatUrl(recentSubmission);
-        return NextResponse.json<ApiResponse>(
-          {
-            success: true,
-            message: "Your ADYK Inspire registration has already been received. Welcome to ADYK Inspire!",
-            data: {
-              id: recentSubmission.id,
-              fullName: recentSubmission.fullName,
-              email: recentSubmission.email,
-              whatsappUrl,
-              alreadyRegistered: true,
-            },
-            timestamp: new Date().toISOString(),
-          },
-          { status: 200 }
-        );
+    if (recentSubmission) {
+      console.log(
+        `[DEDUPLICATION] Accidental duplicate detected within 60s for email: ${validData.email}. Returning existing registration ID: ${recentSubmission.id}`
+      );
+      const whatsappUrl = generateWhatsAppClickToChatUrl(recentSubmission);
+      if (normalizedEmail) {
+        inFlightEmails.delete(normalizedEmail);
       }
+      return NextResponse.json<ApiResponse>(
+        {
+          success: true,
+          message: "Your ADYK Inspire registration has already been received. Welcome to ADYK Inspire!",
+          data: {
+            id: recentSubmission.id,
+            fullName: recentSubmission.fullName,
+            email: recentSubmission.email,
+            whatsappUrl,
+            alreadyRegistered: true,
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 200 }
+      );
+    }
 
-      // 7. Save Registration to PostgreSQL (Must succeed before reporting success)
+    // 7. Save Registration to PostgreSQL (Must succeed before reporting success)
+    let savedRegistration: RegistrationRecord;
+    try {
       const created = await prisma.registration.create({
         data: {
           fullName: validData.fullName,
@@ -170,7 +179,8 @@ export async function POST(req: NextRequest) {
       };
       console.log(`✅ [DB SUCCESS] Registration saved to PostgreSQL: ID ${savedRegistration.id} (${savedRegistration.email})`);
     } catch (dbError: unknown) {
-      console.error("❌ [DB ERROR] Database persistence failed:", dbError);
+      const errorMsg = dbError instanceof Error ? dbError.message : String(dbError);
+      console.error("❌ [DB ERROR] Database persistence failed:", errorMsg);
       return NextResponse.json<ApiResponse>(
         {
           success: false,
