@@ -18,7 +18,12 @@ export const NEON_PRODUCTION_DATABASE_URL =
  */
 export function getDatabaseUrl(): string {
   const envUrl = process.env.DATABASE_URL?.trim();
-  if (envUrl && envUrl !== "" && !envUrl.includes("localhost:5432")) {
+  if (
+    envUrl &&
+    envUrl !== "" &&
+    !envUrl.includes("localhost:5432") &&
+    envUrl.includes("neon.tech")
+  ) {
     return envUrl.replace(/^["']|["']$/g, "");
   }
   return NEON_PRODUCTION_DATABASE_URL;
