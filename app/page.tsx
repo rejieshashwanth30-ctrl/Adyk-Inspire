@@ -2,6 +2,7 @@ import { Navbar } from "@/components/navbar/Navbar";
 import { HeroSection } from "@/components/hero/HeroSection";
 import { ManifestoSection } from "@/components/sections/ManifestoSection";
 import { WhatYouCanDo } from "@/components/sections/WhatYouCanDo";
+import { CommunitySection } from "@/components/community/CommunitySection";
 import { WhoIsFor } from "@/components/sections/WhoIsFor";
 import { AreasOfInterest } from "@/components/sections/AreasOfInterest";
 import { IdeaSection } from "@/components/sections/IdeaSection";
@@ -17,6 +18,7 @@ export default function HomePage() {
         <HeroSection />
         <ManifestoSection />
         <WhatYouCanDo />
+        <CommunitySection />
         <WhoIsFor />
         <AreasOfInterest />
         <IdeaSection />

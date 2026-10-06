@@ -33,7 +33,7 @@ export function WhatYouCanDo() {
   ];
 
   return (
-    <section id="community" className="relative py-28 sm:py-36 px-4 sm:px-6 lg:px-8 border-t border-neutral-900">
+    <section id="capabilities" className="relative py-28 sm:py-36 px-4 sm:px-6 lg:px-8 border-t border-neutral-900">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-16 gap-4">
           <div>

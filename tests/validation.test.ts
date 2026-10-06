@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { registrationSchema } from "../lib/validation";
 import { rateLimitRegistration } from "../lib/rate-limit";
 import { sanitizeString, normalizeEmail, normalizePhone } from "../lib/sanitize";
+import { buildWhatsAppMessage, generateWhatsAppClickToChatUrl } from "../lib/whatsapp";
 
 test("Sanitization and normalization utilities", () => {
   // HTML stripping
@@ -175,8 +176,6 @@ test("Rate Limiter: Allows reasonable submissions and throttles bot floods", () 
 });
 
 test("WhatsApp Click-to-Chat: Builds dynamic message and omits empty optional fields", () => {
-  const { buildWhatsAppMessage, generateWhatsAppClickToChatUrl } = require("../lib/whatsapp");
-
   const reg = {
     fullName: "Alex Rivera",
     whatsapp: "+91 8870605699",
