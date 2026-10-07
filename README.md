@@ -46,7 +46,7 @@ PostgreSQL Database (Prisma ORM)
    ▼                               ▼
 Resend Email Service        Meta WhatsApp Cloud API
    ├─► Admin Alert             ├─► Admin Push Alert
-   │   (rejieshashwanth30@...) └─► wa.me Fallback Link
+   │   (adykcompany.in@...)    └─► wa.me Fallback Link
    └─► User Welcome Email
    │
    ▼
@@ -72,7 +72,7 @@ Resend Email Service        Meta WhatsApp Cloud API
 ## 4. Primary ADYK Contact Details
 
 - **WhatsApp:** `+91 8870605699` (Number: `8870605699`)
-- **Email:** `rejieshashwanth30@gmail.com`
+- **Email:** `adykcompany.in@gmail.com`
 
 ---
 
@@ -101,7 +101,7 @@ DATABASE_URL="postgresql://user:password@localhost:5432/adyk_inspire?schema=publ
 # Resend Email Service
 RESEND_API_KEY="re_..."
 EMAIL_FROM="ADYK Inspire <notifications@adyk.in>"
-ADMIN_EMAIL="rejieshashwanth30@gmail.com"
+ADMIN_EMAIL="adykcompany.in@gmail.com"
 
 # Meta WhatsApp Business Cloud API
 WHATSAPP_ACCESS_TOKEN="EAAB..."
@@ -112,7 +112,7 @@ WHATSAPP_ADMIN_NUMBER="918870605699"
 # Public Variables
 NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 NEXT_PUBLIC_ADYK_WHATSAPP="918870605699"
-NEXT_PUBLIC_ADYK_EMAIL="rejieshashwanth30@gmail.com"
+NEXT_PUBLIC_ADYK_EMAIL="adykcompany.in@gmail.com"
 ```
 
 ### Step 3: Database Migration & Prisma Generation

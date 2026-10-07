@@ -8,7 +8,7 @@ function getResendClient() {
   return apiKey ? new Resend(apiKey) : null;
 }
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "rejieshashwanth30@gmail.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "adykcompany.in@gmail.com";
 const EMAIL_FROM = process.env.EMAIL_FROM || "ADYK Inspire <notifications@adyk.in>";
 const RESEND_SANDBOX_FROM = "ADYK Inspire <onboarding@resend.dev>";
 
@@ -109,7 +109,7 @@ export async function sendUserConfirmationEmail(
           error.message.includes("`to` field"))
       ) {
         console.log(
-          `ℹ️ [Resend Sandbox] Confirmation email to "${userEmail}" skipped because custom domain (adyk.in) is not verified on Resend. Sandbox accounts can only send to the account owner (rejieshashwanth30@gmail.com). Verify adyk.in on https://resend.com/domains to send to all applicants.`
+          `ℹ️ [Resend Sandbox] Confirmation email to "${userEmail}" skipped because custom domain (adyk.in) is not verified on Resend. Sandbox accounts can only send to the account owner (adykcompany.in@gmail.com). Verify adyk.in on https://resend.com/domains to send to all applicants.`
         );
       } else {
         console.error("Resend confirmation email error:", error);

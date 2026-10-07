@@ -54,7 +54,7 @@ export function renderConfirmationEmailHtml(fullName: string): string {
                   WhatsApp: <a href="https://wa.me/918870605699" style="color: #ffffff; text-decoration: underline;">+91 8870605699</a>
                 </div>
                 <div>
-                  Email: <a href="mailto:rejieshashwanth30@gmail.com" style="color: #ffffff; text-decoration: underline;">rejieshashwanth30@gmail.com</a>
+                  Email: <a href="mailto:adykcompany.in@gmail.com" style="color: #ffffff; text-decoration: underline;">adykcompany.in@gmail.com</a>
                 </div>
               </div>
             </td>

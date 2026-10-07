@@ -11,7 +11,7 @@ async function main() {
     create: {
       id: "test-seed-uuid-0001",
       fullName: "Rejiesh Ashwanth",
-      email: "rejieshashwanth30@gmail.com",
+      email: "adykcompany.in@gmail.com",
       whatsapp: "+91 8870605699",
       location: "Chennai, India",
       ageGroup: "22–25",

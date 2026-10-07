@@ -103,7 +103,7 @@ export default function PrivacyPage() {
                 To make any inquiries, please contact our team directly:
               </p>
               <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-900 font-mono text-xs text-neutral-400 space-y-1">
-                <div>Email: <a href="mailto:rejieshashwanth30@gmail.com" className="text-white underline">rejieshashwanth30@gmail.com</a></div>
+                <div>Email: <a href="mailto:adykcompany.in@gmail.com" className="text-white underline">adykcompany.in@gmail.com</a></div>
                 <div>WhatsApp: <a href="https://wa.me/918870605699" className="text-white underline">+91 8870605699</a></div>
                 <div>Entity: ADYK — A Multi-Venture Technology Company</div>
               </div>

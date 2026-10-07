@@ -155,11 +155,11 @@ function SuccessContent() {
             <span>+91 8870605699</span>
           </a>
           <a
-            href="mailto:rejieshashwanth30@gmail.com"
+            href="mailto:adykcompany.in@gmail.com"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-neutral-800 bg-neutral-900/60 text-neutral-300 hover:text-white hover:border-neutral-700 transition-colors"
           >
             <Mail className="w-3.5 h-3.5" />
-            <span>rejieshashwanth30@gmail.com</span>
+            <span>adykcompany.in@gmail.com</span>
           </a>
         </div>
       </motion.div>

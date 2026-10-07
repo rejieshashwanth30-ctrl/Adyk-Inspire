@@ -117,7 +117,7 @@ export function Navbar() {
 
             <div className="mt-4 pt-4 border-t border-neutral-900 flex flex-col gap-1 text-[11px] text-neutral-500">
               <span>Primary Contact: +91 8870605699</span>
-              <span>Email: rejieshashwanth30@gmail.com</span>
+              <span>Email: adykcompany.in@gmail.com</span>
             </div>
           </nav>
         </div>

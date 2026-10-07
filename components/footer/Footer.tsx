@@ -61,11 +61,11 @@ export function Footer() {
               <span>WhatsApp: +91 8870605699</span>
             </a>
             <a
-              href="mailto:rejieshashwanth30@gmail.com"
+              href="mailto:adykcompany.in@gmail.com"
               className="inline-flex items-center gap-2 text-xs text-neutral-400 hover:text-white transition-colors"
             >
               <Mail className="w-3.5 h-3.5" />
-              <span>rejieshashwanth30@gmail.com</span>
+              <span>adykcompany.in@gmail.com</span>
             </a>
             <div className="pt-2 flex flex-col gap-2">
               <Link href="/privacy" className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors">
